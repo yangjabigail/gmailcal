@@ -45,10 +45,6 @@ def add_cal_event(cal, msg):
             'dateTime': end_string,
             'timeZone': 'America/Los_Angeles',
         },
-        'recurrence': [],
-        'attendees': [
-            {'email': 'ayang@idtech.com'},
-        ],
         'reminders': {
             'useDefault': False,
             'overrides': [
@@ -58,9 +54,19 @@ def add_cal_event(cal, msg):
         'status': 'confirmed'
     }
 
-    # Add event to the Google Calendar and print to console to notify user! 
-    event = cal.events().insert(calendarId='primary', body=event).execute()
-    print('Lesson for %s added' %student_name)
+    # Call the Calendar API
+    events_result = cal.events().list(calendarId='primary', timeMax=end_string, timeMin=start_string,
+                                        maxResults=1, singleEvents=True,
+                                        orderBy='startTime').execute()
+    existEvent = events_result.get('items')
+
+    if not existEvent:
+        # Add event to the Google Calendar and print to console to notify user!
+        event = cal.events().insert(calendarId='primary', body=event).execute()
+        print('Lesson for %s added' %student_name)
+    else:
+        print('Lesson for', student_name,'is a duplicate or overlaps with:', existEvent[0]['summary'])
+
 
 # Function that accesses Gmail and goes through a list of email snippets, calling parsing function each time
 def get_booking_emails(cal, mail):
